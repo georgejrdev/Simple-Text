@@ -7,3 +7,11 @@
 *.so
 *.a
 *.dSYM
+/build/main.o
+/build/Makefile
+/build/moc_mainwindow.o
+/build/mainwindow.o
+/build/moc_mainwindow.cpp
+/build/moc_predefs.h
+/build/ui_mainwindow.h
+/build/.qmake.stash
