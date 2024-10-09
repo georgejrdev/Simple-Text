@@ -1,0 +1,9 @@
+*.pro.user
+*.user
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.dSYM
