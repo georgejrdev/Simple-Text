@@ -18,20 +18,25 @@
 #include <QLineEdit>
 #include <QFont>
 
+
 bool isMenuVisible = false;
 QString currentFileName;
 QLabel *fileNameLabel;
 
+
 void toggleMenu(QWidget* menu, QWidget* parent) {
     if (isMenuVisible) {
         menu->hide();
+
     } else {
         menu->move(parent->pos().x() + 10, parent->pos().y() + 40);
         menu->show();
         menu->raise();
     }
+
     isMenuVisible = !isMenuVisible;
 }
+
 
 void openFile(QTextEdit *textEdit) {
     QString fileName = QFileDialog::getOpenFileName(nullptr, "Open file", "", "Text Files (*.txt);;All Files (*)");
@@ -50,6 +55,7 @@ void openFile(QTextEdit *textEdit) {
     textEdit->setPlainText(in.readAll());
     file.close();
 }
+
 
 void saveFile(QTextEdit *textEdit) {
     if (currentFileName.isEmpty()) {
@@ -72,6 +78,25 @@ void saveFile(QTextEdit *textEdit) {
     fileNameLabel->setText(QFileInfo(currentFileName).fileName());
 }
 
+
+void loadFileFromArguments(int argc, char *argv[], QTextEdit *textEdit, QLabel *fileNameLabel) {
+    if (argc > 1) {
+        QString fileName = argv[1];
+        currentFileName = fileName;
+        fileNameLabel->setText(QFileInfo(fileName).fileName());
+
+        QFile file(fileName);
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream in(&file);
+            textEdit->setPlainText(in.readAll());
+            file.close();
+        } else {
+            QMessageBox::warning(nullptr, "Error", "Unable to open file.");
+        }
+    }
+}
+
+
 void updateFontSize(QTextEdit *textEdit, QLineEdit *fontSizeInput, int change = 0) {
     bool ok;
     int currentSize = fontSizeInput->text().toInt(&ok);
@@ -86,6 +111,7 @@ void updateFontSize(QTextEdit *textEdit, QLineEdit *fontSizeInput, int change = 
 
     fontSizeInput->setText(QString::number(newSize));
 }
+
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -169,6 +195,8 @@ int main(int argc, char *argv[]) {
 
     QTextEdit *textEdit = new QTextEdit;
     mainLayout->addWidget(textEdit);
+
+    loadFileFromArguments(argc, argv, textEdit, fileNameLabel);
 
     QObject::connect(openButton, &QPushButton::clicked, [&]() {
         openFile(textEdit);
