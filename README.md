@@ -1,7 +1,7 @@
 <table>
     <tr>
         <td style="text-align: center;">
-            <img src="./images/logo.png" alt="logo" width="120" height="120">
+            <img src="./images/ico.png" alt="logo" width="120" height="120">
         </td>
         <td>
             <h1>Simple Text</h1>
@@ -26,7 +26,7 @@
 
 <a href="https://github.com/georgejrdev/Simple-Text/raw/main/build/SimpleText">![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)</a>
 
-<a href="#">![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)</a>
+<!-- <a href="#">![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)</a> -->
 
 </div>
 

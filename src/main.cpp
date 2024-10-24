@@ -17,24 +17,31 @@
 #include <QKeySequence>
 #include <QLineEdit>
 #include <QFont>
-
+#include <QCheckBox>
 
 bool isMenuVisible = false;
 QString currentFileName;
 QLabel *fileNameLabel;
+bool isFileModified = false;
 
 
-void toggleMenu(QWidget* menu, QWidget* parent) {
+void toggleMenu(QWidget* menu) {
     if (isMenuVisible) {
         menu->hide();
-
     } else {
-        menu->move(parent->pos().x() + 10, parent->pos().y() + 40);
         menu->show();
         menu->raise();
     }
-
     isMenuVisible = !isMenuVisible;
+}
+
+
+void updateFileNameLabel() {
+    QString displayName = QFileInfo(currentFileName).fileName();
+    if (isFileModified) {
+        displayName += " *";
+    }
+    fileNameLabel->setText(displayName);
 }
 
 
@@ -43,7 +50,8 @@ void openFile(QTextEdit *textEdit) {
     if (fileName.isEmpty()) return;
 
     currentFileName = fileName;
-    fileNameLabel->setText(QFileInfo(fileName).fileName());
+    isFileModified = false;
+    updateFileNameLabel();
 
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -75,15 +83,17 @@ void saveFile(QTextEdit *textEdit) {
     out << textEdit->toPlainText();
     file.close();
 
-    fileNameLabel->setText(QFileInfo(currentFileName).fileName());
+    isFileModified = false;
+    updateFileNameLabel();
 }
 
 
-void loadFileFromArguments(int argc, char *argv[], QTextEdit *textEdit, QLabel *fileNameLabel) {
+void loadFileFromArguments(int argc, char *argv[], QTextEdit *textEdit) {
     if (argc > 1) {
         QString fileName = argv[1];
         currentFileName = fileName;
-        fileNameLabel->setText(QFileInfo(fileName).fileName());
+        isFileModified = false;
+        updateFileNameLabel();
 
         QFile file(fileName);
         if (file.open(QIODevice::ReadOnly)) {
@@ -113,6 +123,13 @@ void updateFontSize(QTextEdit *textEdit, QLineEdit *fontSizeInput, int change = 
 }
 
 
+void autoSaveFile(QTextEdit *textEdit, QCheckBox *autoSaveCheckBox) {
+    if (autoSaveCheckBox->isChecked() && !currentFileName.isEmpty()) {
+        saveFile(textEdit);
+    }
+}
+
+
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
@@ -129,7 +146,7 @@ int main(int argc, char *argv[]) {
     topBar->setStyleSheet("background-color: #464646;");
 
     QHBoxLayout *topBarLayout = new QHBoxLayout(topBar);
-    topBarLayout->setContentsMargins(0, 0, 0, 0);
+    topBarLayout->setContentsMargins(10, 0, 10, 0);
     topBarLayout->setSpacing(0);
 
     QPushButton *button = new QPushButton("● ● ●");
@@ -140,18 +157,24 @@ int main(int argc, char *argv[]) {
     fileNameLabel->setStyleSheet("color: #FFFFFF; font-size: 16px;");
     fileNameLabel->setAlignment(Qt::AlignCenter);
 
+    QLabel *versionLabel = new QLabel("v1.0.0");
+    versionLabel->setStyleSheet("color: #AAAAAA; font-size: 12px;");
+    versionLabel->setFixedWidth(50);
+
     topBarLayout->addWidget(button, 0, Qt::AlignLeft);
-    topBarLayout->addWidget(fileNameLabel, 1);
+    topBarLayout->addWidget(fileNameLabel, 1, Qt::AlignHCenter);
+    topBarLayout->addWidget(versionLabel, 0, Qt::AlignRight);
     mainLayout->addWidget(topBar);
 
     QWidget *menu = new QWidget(&window);
-    menu->setFixedSize(150, 150);
+    menu->setFixedSize(150, 200);
+    menu->setGeometry(10, 50, 150, 200);
     menu->setStyleSheet("background-color: #2F2F2F;");
     menu->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     menu->setVisible(false);
 
     QVBoxLayout *menuLayout = new QVBoxLayout(menu);
-    menuLayout->setContentsMargins(0, 0, 0, 0);
+    menuLayout->setContentsMargins(10, 10, 10, 10);
     menuLayout->setSpacing(5);
 
     QPushButton *openButton = new QPushButton("Open");
@@ -188,28 +211,43 @@ int main(int argc, char *argv[]) {
     fontSizeLayout->addWidget(fontSizeInput);
     fontSizeLayout->addWidget(increaseFontButton);
 
+    QLabel *autoSaveLabel = new QLabel("Auto Save");
+    autoSaveLabel->setStyleSheet("color: #FFFFFF; font-size: 12px;");
+    autoSaveLabel->setAlignment(Qt::AlignCenter);
+
+    QCheckBox *autoSaveCheckBox = new QCheckBox();
+    autoSaveCheckBox->setFixedSize(20, 20);
+    autoSaveCheckBox->setStyleSheet("color: #FFFFFF; font-size: 12px; border:2px solid #FFFFFF;");
+    autoSaveCheckBox->setChecked(true);
+
+    QHBoxLayout *autoSaveLayout = new QHBoxLayout();
+    autoSaveLayout->setAlignment(Qt::AlignCenter);
+    autoSaveLayout->addWidget(autoSaveCheckBox);
+
     menuLayout->addWidget(openButton);
     menuLayout->addWidget(saveButton);
     menuLayout->addWidget(fontSizeLabel);
     menuLayout->addWidget(fontSizeWidget);
+    menuLayout->addWidget(autoSaveLabel);
+    menuLayout->addLayout(autoSaveLayout);
 
     QTextEdit *textEdit = new QTextEdit;
     mainLayout->addWidget(textEdit);
 
-    loadFileFromArguments(argc, argv, textEdit, fileNameLabel);
+    loadFileFromArguments(argc, argv, textEdit);
 
     QObject::connect(openButton, &QPushButton::clicked, [&]() {
         openFile(textEdit);
-        toggleMenu(menu, &window);
+        toggleMenu(menu);
     });
 
     QObject::connect(saveButton, &QPushButton::clicked, [&]() {
         saveFile(textEdit);
-        toggleMenu(menu, &window);
+        toggleMenu(menu);
     });
 
     QObject::connect(button, &QPushButton::clicked, [&]() {
-        toggleMenu(menu, &window);
+        toggleMenu(menu);
     });
 
     QObject::connect(decreaseFontButton, &QPushButton::clicked, [&]() {
@@ -224,9 +262,22 @@ int main(int argc, char *argv[]) {
         updateFontSize(textEdit, fontSizeInput);
     });
 
+    QObject::connect(textEdit, &QTextEdit::textChanged, [&]() {
+        isFileModified = true;
+        updateFileNameLabel();
+    });
+
+    QObject::connect(textEdit, &QTextEdit::textChanged, [&]() {
+        isFileModified = true;
+        updateFileNameLabel();
+        autoSaveFile(textEdit, autoSaveCheckBox);
+    });
+
     QFont initialFont = textEdit->font();
     initialFont.setPointSize(12);
     textEdit->setFont(initialFont);
+
+    textEdit->setStyleSheet("QTextEdit { line-height: 1.5; }");
 
     window.setLayout(mainLayout);
     window.show();
