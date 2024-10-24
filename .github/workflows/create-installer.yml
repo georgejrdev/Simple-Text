@@ -1,0 +1,37 @@
+name: Create Installer For New Version
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create installer folder
+        run: |
+          mkdir -p ./downloads/simple-text
+          cp ./build/SimpleText ./downloads/simple-text/SimpleText
+          cp ./images/ico.png ./downloads/simple-text/ico.png
+          cp ./install-files/Simple-Text.desktop ./downloads/simple-text/Simple-Text.desktop
+          cp ./install-files/install.sh ./downloads/simple-text/install.sh
+        
+      - name: Compact installer folder
+        run: |
+          zip -r ./downloads/simple-text.zip ./downloads/simple-text          
+          rm -r ./downloads/simple-text
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add downloads
+          git commit -m "Update installer"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

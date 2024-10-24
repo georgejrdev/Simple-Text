@@ -9,7 +9,7 @@
 <div id="badges" align="center">
 
 ![License](https://img.shields.io/github/license/georgejrdev/Simple-Text.svg)
-![Version](https://img.shields.io/badge/version-0.0.1-53918E.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-53918E.svg)
 ![Windows](https://img.shields.io/badge/made%20for-linuxㅤ/ㅤwindows-AD6845.svg)
 
 </div>
@@ -24,7 +24,7 @@
 
 <div style="display:flex;gap:30px;margin-top:35px">
 
-<a href="https://github.com/georgejrdev/Simple-Text/raw/main/build/SimpleText">![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)</a>
+<a href="https://github.com/georgejrdev/Simple-Text/raw/main/download/simple-text.zip">![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)</a>
 
 <!-- <a href="#">![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)</a> -->
 
