@@ -317,6 +317,11 @@ int main(int argc, char *argv[]) {
         saveAsNewFile(textEdit);
     });
 
+    QShortcut *changeMenuVisibility = new QShortcut(QKeySequence(Qt::Key_Escape), &window);
+    QObject::connect(changeMenuVisibility, &QShortcut::activated, [&]() {
+        toggleMenu(menu);
+    });
+
     // Start
 
     window.setLayout(mainLayout);
