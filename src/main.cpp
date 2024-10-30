@@ -23,6 +23,7 @@ bool isMenuVisible = false;
 QString currentFileName;
 QLabel *fileNameLabel;
 bool isFileModified = false;
+QString version = "v1.0.1";
 
 
 void toggleMenu(QWidget* menu) {
@@ -85,6 +86,12 @@ void saveFile(QTextEdit *textEdit) {
 
     isFileModified = false;
     updateFileNameLabel();
+}
+
+
+void saveAsNewFile(QTextEdit *textEdit){
+    currentFileName.clear();
+    saveFile(textEdit);
 }
 
 
@@ -157,7 +164,7 @@ int main(int argc, char *argv[]) {
     fileNameLabel->setStyleSheet("color: #FFFFFF; font-size: 16px;");
     fileNameLabel->setAlignment(Qt::AlignCenter);
 
-    QLabel *versionLabel = new QLabel("v1.0.0");
+    QLabel *versionLabel = new QLabel(version);
     versionLabel->setStyleSheet("color: #AAAAAA; font-size: 12px;");
     versionLabel->setFixedWidth(50);
 
@@ -166,8 +173,9 @@ int main(int argc, char *argv[]) {
     topBarLayout->addWidget(versionLabel, 0, Qt::AlignRight);
     mainLayout->addWidget(topBar);
 
+
     QWidget *menu = new QWidget(&window);
-    menu->setFixedSize(150, 200);
+    menu->setFixedSize(150, 250);
     menu->setGeometry(10, 50, 150, 200);
     menu->setStyleSheet("background-color: #2F2F2F;");
     menu->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -184,6 +192,10 @@ int main(int argc, char *argv[]) {
     QPushButton *saveButton = new QPushButton("Save");
     saveButton->setStyleSheet("background-color: #000000; color: #FFFFFF; font-size: 12px;");
     saveButton->setFixedHeight(30);
+
+    QPushButton *saveAsNewFileButton = new QPushButton("Save As");
+    saveAsNewFileButton->setStyleSheet("background-color: #000000; color: #FFFFFF; font-size: 12px;");
+    saveAsNewFileButton->setFixedHeight(30);
 
     QLabel *fontSizeLabel = new QLabel("Font Size");
     fontSizeLabel->setStyleSheet("color: #FFFFFF; font-size: 12px;");
@@ -226,15 +238,24 @@ int main(int argc, char *argv[]) {
 
     menuLayout->addWidget(openButton);
     menuLayout->addWidget(saveButton);
+    menuLayout->addWidget(saveAsNewFileButton);
     menuLayout->addWidget(fontSizeLabel);
     menuLayout->addWidget(fontSizeWidget);
     menuLayout->addWidget(autoSaveLabel);
     menuLayout->addLayout(autoSaveLayout);
 
+
     QTextEdit *textEdit = new QTextEdit;
     mainLayout->addWidget(textEdit);
 
     loadFileFromArguments(argc, argv, textEdit);
+
+    QFont initialFont = textEdit->font();
+    initialFont.setPointSize(12);
+    textEdit->setFont(initialFont);
+    textEdit->setStyleSheet("QTextEdit { line-height: 1.5; }");
+
+    // Connect
 
     QObject::connect(openButton, &QPushButton::clicked, [&]() {
         openFile(textEdit);
@@ -244,6 +265,11 @@ int main(int argc, char *argv[]) {
     QObject::connect(saveButton, &QPushButton::clicked, [&]() {
         saveFile(textEdit);
         toggleMenu(menu);
+    });
+
+    QObject::connect(saveAsNewFileButton, &QPushButton::clicked, [&](){
+       saveAsNewFile(textEdit);
+       toggleMenu((menu));
     });
 
     QObject::connect(button, &QPushButton::clicked, [&]() {
@@ -273,14 +299,8 @@ int main(int argc, char *argv[]) {
         autoSaveFile(textEdit, autoSaveCheckBox);
     });
 
-    QFont initialFont = textEdit->font();
-    initialFont.setPointSize(12);
-    textEdit->setFont(initialFont);
 
-    textEdit->setStyleSheet("QTextEdit { line-height: 1.5; }");
-
-    window.setLayout(mainLayout);
-    window.show();
+    // Shortcuts
 
     QShortcut *openShortcut = new QShortcut(QKeySequence("Ctrl+O"), &window);
     QObject::connect(openShortcut, &QShortcut::activated, [&]() {
@@ -291,6 +311,16 @@ int main(int argc, char *argv[]) {
     QObject::connect(saveShortcut, &QShortcut::activated, [&]() {
         saveFile(textEdit);
     });
+
+    QShortcut *saveAsShortcut = new QShortcut(QKeySequence("Ctrl+Shift+S"), &window);
+    QObject::connect(saveAsShortcut, &QShortcut::activated, [&]() {
+        saveAsNewFile(textEdit);
+    });
+
+    // Start
+
+    window.setLayout(mainLayout);
+    window.show();
 
     return app.exec();
 }
