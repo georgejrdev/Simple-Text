@@ -1,0 +1,35 @@
+name: Update README with version
+
+on:
+  push:
+    branches:
+      - main  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Update README with version
+        run: |
+          VERSION=$(grep -Eo "v[0-9]+\.[0-9]+\.[0-9]+" ./src/main.cpp)
+          VERSION_NO_V=${VERSION:1}
+          sed -i "s/version = \"v[0-9]+\.[0-9]+\.[0-9]+\"/version = \"v${VERSION_NO_V}\"/" ./README.md
+          echo "Version updated to: $VERSION"
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add README.md
+            git commit -m "Update README - version: ${{ env.VERSION }}"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
