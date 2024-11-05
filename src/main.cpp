@@ -322,6 +322,7 @@ int main(int argc, char *argv[]) {
         toggleMenu(menu);
     });
 
+
     // Start
 
     window.setLayout(mainLayout);

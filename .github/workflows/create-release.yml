@@ -1,0 +1,83 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python for version extraction
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Extract version from main.cpp
+        id: extract_version
+        run: |
+          import re
+          with open("./src/main.cpp", "r") as f:
+              content = f.read()
+              match = re.search(r'QString version = "v(\d+\.\d+\.\d+)";', content)
+              if match:
+                  version = match.group(1)
+                  print(f"::set-output name=version::{version}")
+              else:
+                  raise ValueError("Version not found in main.cpp")
+        shell: python
+
+      - name: Create linux<version> directory and add files
+        run: |
+          VERSION=${{ steps.extract_version.outputs.version }}
+          VERSION_NO_V="${VERSION:1}"  
+          RELEASE_DIR="linux${VERSION}"
+          mkdir "$RELEASE_DIR"
+          cp ./build/SimpleText "$RELEASE_DIR/"
+          cp ./install-files/Simple-Text.desktop "$RELEASE_DIR/"
+          cp ./install-files/install.sh "$RELEASE_DIR/"
+          cp ./images/ico.png "$RELEASE_DIR/"
+          echo "$VERSION_NO_V" >> "$RELEASE_DIR/Simple-Text.desktop"
+
+      - name: Zip the release directory
+        run: |
+          VERSION=${{ steps.extract_version.outputs.version }}
+          zip -r "linux${VERSION}.zip" "linux${VERSION}"
+          mkdir -p ./dist
+          mv "linux${VERSION}.zip" ./dist/
+
+      - name: Clean up release directory
+        run: |
+          VERSION=${{ steps.extract_version.outputs.version }}
+          rm -rf "linux${VERSION}"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env: 
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        with:
+          tag_name: "v${{ steps.extract_version.outputs.version }}"
+          release_name: "Release v${{ steps.extract_version.outputs.version }}"
+          body: "Release version v${{ steps.extract_version.outputs.version }}"
+          draft: false
+          prerelease: false
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env: 
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/linux${{ steps.extract_version.outputs.version }}.zip
+          asset_name: linux${{ steps.extract_version.outputs.version }}.zip
+          asset_content_type: application/zip
